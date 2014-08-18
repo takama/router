@@ -1,7 +1,7 @@
 Go Router
 =========
 
-Simple, compact and fast a router package for use with Go services to process HTTP requests
+A simple, compact and fast router package for use with Go services to process HTTP requests
 
 [![Build Status](https://travis-ci.org/takama/router.png?branch=master)](https://travis-ci.org/takama/router)
 [![GoDoc](https://godoc.org/github.com/takama/router?status.svg)](https://godoc.org/github.com/takama/router)
