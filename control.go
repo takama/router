@@ -46,7 +46,7 @@ func (c *Control) Set(params []Param) {
 	c.Params = append(c.Params, params...)
 }
 
-// Code aggigns http status code, which returns on http request
+// Code assigns http status code, which returns on http request
 func (c *Control) Code(code int) *Control {
 	if code >= 200 && code < 600 {
 		c.code = code
