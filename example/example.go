@@ -18,6 +18,7 @@ func main() {
 				"port":     "3306",
 			},
 		}
+		c.UseTimer()
 		c.Code(200).Body(data)
 	})
 	// Listen and serve on 0.0.0.0:8888

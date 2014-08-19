@@ -8,7 +8,7 @@ A simple, compact and fast router package for use with Go services to process HT
 
 ### Examples
 
-Simplest example (serve static route): 
+- Simplest example (serve static route): 
 ```go
 package main
 
@@ -29,7 +29,7 @@ func main() {
 }
 ```
 
-Check it:
+- Check it:
 ```sh
 curl -i http://localhost:8888/hello/
 
@@ -41,7 +41,7 @@ Content-Length: 11
 Hello world
 ```
 
-Serve dynamic route with parameter:
+- Serve dynamic route with parameter:
 ```go
 func main() {
 	r := router.New()
@@ -54,7 +54,7 @@ func main() {
 }
 ```
 
-Check it:
+- Check it:
 ```sh
 curl -i http://localhost:8888/hello/John
 
@@ -66,7 +66,7 @@ Content-Length: 10
 Hello John
 ```
 
-Checks JSON Content-Type automatically:
+- Checks JSON Content-Type automatically:
 ```go
 func main() {
 	r := router.New()
@@ -85,7 +85,7 @@ func main() {
 }
 ```
 
-Check it:
+- Check it:
 ```sh
 curl -i http://localhost:8888/api/v1/settings/database/testdb
 
@@ -99,6 +99,47 @@ Content-Length: 102
     "database": "testdb",
     "host": "localhost",
     "port": "3306"
+  }
+}
+```
+
+- Use timer to calculate the elapsed time of request handling:
+```go
+func main() {
+	r := router.New()
+	r.GET("/api/v1/settings/database/:db", func(c *router.Control) {
+		data := map[string]map[string]string{
+			"Database settings": {
+				"database": c.Get(":db"),
+				"host":     "localhost",
+				"port":     "3306",
+			},
+		}
+		c.UseTimer()
+		c.Code(200).Body(data)
+	})
+	// Listen and serve on 0.0.0.0:8888
+	r.Listen(":8888")
+}
+```
+
+- Check it:
+```sh
+curl -i http://localhost:8888/api/v1/settings/database/testdb
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Sun, 17 Aug 2014 13:26:05 GMT
+Content-Length: 143
+
+{
+  "took": 422,
+  "data": {
+    "Database settings": {
+      "database": "testdb",
+      "host": "localhost",
+      "port": "3306"
+    }
   }
 }
 ```

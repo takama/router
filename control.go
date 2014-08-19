@@ -7,26 +7,46 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 const (
+	// MIMEJSON - "Content-type" for JSON
 	MIMEJSON = "application/json"
+	// MIMETEXT - "Content-type" for TEXT
 	MIMETEXT = "text/plain"
 )
 
 // Control allows us to pass variables between middleware,
 // assign Http codes and render a Body.
 type Control struct {
+
+	// Request is an adapter which allows the usage of a http.Request as standard request
 	Request *http.Request
-	Writer  http.ResponseWriter
-	code    int
-	Params  []Param
+
+	// Writer is an adapter which allows the usage of a http.ResponseWriter as standard writer
+	Writer http.ResponseWriter
+
+	// Code of HTTP status
+	code int
+
+	// Params is set of parameters
+	Params []Param
+
+	// timer used to calculate a elapsed time for handler and writing it in a response
+	timer time.Time
 }
 
 // Param is a URL parameter which represents as key and value.
 type Param struct {
 	Key   string
 	Value string
+}
+
+// Header used if non-zero Control.timer initialized by UserTimer() method
+type Header struct {
+	Took time.Duration `json:"took"`
+	Data interface{}   `json:"data"`
 }
 
 // Get returns the first value associated with the given name.
@@ -54,19 +74,28 @@ func (c *Control) Code(code int) *Control {
 	return c
 }
 
+// UseTimer allow caalculate elapsed time of request handling
+func (c *Control) UseTimer() {
+	c.timer = time.Now()
+}
+
 // Body renders the given data into the response body
 func (c *Control) Body(data interface{}) {
 	var content []byte
 	if str, ok := data.(string); ok {
-		c.Writer.Header().Set("Content-type", MIMETEXT)
+		c.Writer.Header().Add("Content-type", MIMETEXT)
 		content = []byte(str)
 	} else {
+		if !c.timer.IsZero() {
+			took := time.Now()
+			data = &Header{Took: took.Sub(c.timer), Data: data}
+		}
 		jsn, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		c.Writer.Header().Set("Content-type", MIMEJSON)
+		c.Writer.Header().Add("Content-type", MIMEJSON)
 		content = jsn
 	}
 	if c.code > 0 {
