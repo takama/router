@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-var parameters []Param = []Param{
+var parameters = []Param{
 	{"name", "John"},
 	{"age", "32"},
 	{"gender", "M"},

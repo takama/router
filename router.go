@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.1.1 provides fast HTTP request router.
+Package router 0.2.0 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -71,15 +71,26 @@ package router
 import (
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Router represents a multiplexer for HTTP requests.
 type Router struct {
+	// List of handlers which accociated with known http methods (GET, POST ...)
 	handlers map[string]*parser
+
 	// NotFound is called when unknown HTTP method or a handler not found.
 	// If it is not set, http.NotFound is used.
 	// Please overwrite this if need your own NotFound handler.
 	NotFound http.HandlerFunc
+
+	// PanicHandler is called when panic happen.
+	// The handler prevents your server from crashing and should be used to return
+	// http status code http.StatusInternalServerError (500)
+	PanicHandler func(c *Control)
+
+	// Logger activates logging for each requests
+	Logger bool
 }
 
 // Handle type is aliased to type of handler function.
@@ -158,6 +169,19 @@ func (r *Router) Listen(hostPort string) {
 
 // ServeHTTP implements http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		if recovery := recover(); recovery != nil {
+			c := &Control{Request: req, Writer: w}
+			if r.PanicHandler != nil {
+				r.PanicHandler(c)
+			} else {
+				log.Println("Recovered in handler:", req.Method, req.URL.Path)
+			}
+		}
+	}()
+	if r.Logger {
+		log.Println(req.Method, req.URL.Path)
+	}
 	if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
 		c := &Control{Request: req, Writer: w}
 		if len(params) > 0 {
@@ -166,11 +190,22 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handle(c)
 		return
 	}
-
-	if r.NotFound != nil {
-		r.NotFound(w, req)
-	} else {
-		http.NotFound(w, req)
+	allowed := make([]string, 0, len(r.handlers))
+	for method, parser := range r.handlers {
+		if _, _, ok := parser.get(req.URL.Path); ok {
+			allowed = append(allowed, method)
+		}
 	}
-	return
+
+	if len(allowed) == 0 {
+		if r.NotFound != nil {
+			r.NotFound(w, req)
+		} else {
+			http.NotFound(w, req)
+		}
+		return
+	}
+
+	w.Header().Add("Allow", strings.Join(allowed, ", "))
+	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
