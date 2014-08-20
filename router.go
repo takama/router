@@ -3,11 +3,14 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.2.0 provides fast HTTP request router.
+Package router 0.2.1 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
 request to defined handler.
+The router package is useful to prepare a RESTful API for Go services.
+It has JSON output, which bind automatically for relevant type of data.
+The router has timer feature to display duration of request handling in the header
 
 Simplest example (serve static route):
 
