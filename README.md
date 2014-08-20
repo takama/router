@@ -1,7 +1,8 @@
 Go Router
 =========
 
-A simple, compact and fast router package for use with Go services to process HTTP requests
+A simple, compact and fast router package to process HTTP requests.
+The router package is useful to prepare a RESTful API for Go services. It has JSON output, which bind automatically for relevant type of data. The router has timer feature to display duration of request handling in the header  
 
 [![Build Status](https://travis-ci.org/takama/router.png?branch=master)](https://travis-ci.org/takama/router)
 [![GoDoc](https://godoc.org/github.com/takama/router?status.svg)](https://godoc.org/github.com/takama/router)
@@ -108,6 +109,10 @@ Content-Length: 102
 func main() {
 	r := router.New()
 	r.GET("/api/v1/settings/database/:db", func(c *router.Control) {
+		c.UseTimer()
+
+		// Do something
+
 		data := map[string]map[string]string{
 			"Database settings": {
 				"database": c.Get(":db"),
@@ -115,7 +120,6 @@ func main() {
 				"port":     "3306",
 			},
 		}
-		c.UseTimer()
 		c.Code(200).Body(data)
 	})
 	// Listen and serve on 0.0.0.0:8888

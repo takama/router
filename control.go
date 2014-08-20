@@ -43,7 +43,7 @@ type Param struct {
 	Value string
 }
 
-// Header used if non-zero Control.timer initialized by UserTimer() method
+// Header is used to prepare a JSON header with duration triggered by UserTimer() method
 type Header struct {
 	Took time.Duration `json:"took"`
 	Data interface{}   `json:"data"`

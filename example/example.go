@@ -11,6 +11,10 @@ func main() {
 	})
 
 	r.GET("/api/v1/settings/database/:db", func(c *router.Control) {
+		c.UseTimer()
+
+		// Do something
+
 		data := map[string]map[string]string{
 			"Database settings": {
 				"database": c.Get(":db"),
@@ -18,7 +22,6 @@ func main() {
 				"port":     "3306",
 			},
 		}
-		c.UseTimer()
 		c.Code(200).Body(data)
 	})
 	// Listen and serve on 0.0.0.0:8888
