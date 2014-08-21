@@ -61,6 +61,9 @@ func (p *parser) register(path string, handle Handle) bool {
 }
 
 func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
+	if handle, ok := p.static[path]; ok {
+		return handle, nil, true
+	}
 	if parts, ok := split(path); ok {
 		if handle, ok := p.static["/"+strings.Join(parts, "/")]; ok {
 			return handle, nil, true
