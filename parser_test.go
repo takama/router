@@ -9,22 +9,66 @@ import (
 	"testing"
 )
 
+type registered struct {
+	path   string
+	handle Handle
+}
+
 type expected struct {
-	path       string
 	request    string
-	handle     Handle
 	data       string
 	paramCount int
 	params     []Param
 }
 
-var setOfExpected = []expected{
+var setOfRegistered = []registered{
 	{
 		"/hello/:name",
-		"/hello/Jane",
 		func(c *Control) {
 			c.Body("Hello " + c.Get(":name"))
 		},
+	},
+	{
+		"/hello/John",
+		func(c *Control) {
+			c.Body("Hello from static path")
+		},
+	},
+	{
+		"/:h/:n",
+		func(c *Control) {
+			c.Body(c.Get(":n") + " from " + c.Get(":h"))
+		},
+	},
+	{
+		"/products/:name/orders/:id",
+		func(c *Control) {
+			c.Body("Product: " + c.Get(":name") + " order# " + c.Get(":id"))
+		},
+	},
+	{
+		"/products/book/orders/:id",
+		func(c *Control) {
+			c.Body("Product: book order# " + c.Get(":id"))
+		},
+	},
+	{
+		"/products/:name/:order/:id",
+		func(c *Control) {
+			c.Body("Product: " + c.Get(":name") + " # " + c.Get(":id"))
+		},
+	},
+	{
+		"/:product/:name/:order/:id",
+		func(c *Control) {
+			c.Body(c.Get(":product") + " " + c.Get(":name") + " " + c.Get(":order") + " # " + c.Get(":id"))
+		},
+	},
+}
+
+var setOfExpected = []expected{
+	{
+		"/hello/Jane",
 		"Hello Jane",
 		1,
 		[]Param{
@@ -33,20 +77,12 @@ var setOfExpected = []expected{
 	},
 	{
 		"/hello/John",
-		"/hello/John",
-		func(c *Control) {
-			c.Body("Hello from static path")
-		},
 		"Hello from static path",
 		0,
 		[]Param{},
 	},
 	{
-		"/:h/:n",
 		"/hell/jack",
-		func(c *Control) {
-			c.Body(c.Get(":n") + " from " + c.Get(":h"))
-		},
 		"jack from hell",
 		2,
 		[]Param{
@@ -54,11 +90,58 @@ var setOfExpected = []expected{
 			{":n", "jack"},
 		},
 	},
+	{
+		"/products/table/orders/23",
+		"Product: table order# 23",
+		2,
+		[]Param{
+			{":name", "table"},
+			{":id", "23"},
+		},
+	},
+	{
+		"/products/book/orders/12",
+		"Product: book order# 12",
+		1,
+		[]Param{
+			{":id", "12"},
+		},
+	},
+	{
+		"/products/pen/orders/11",
+		"Product: pen order# 11",
+		2,
+		[]Param{
+			{":name", "pen"},
+			{":id", "11"},
+		},
+	},
+	{
+		"/products/pen/order/10",
+		"Product: pen # 10",
+		3,
+		[]Param{
+			{":name", "pen"},
+			{":order", "order"},
+			{":id", "10"},
+		},
+	},
+	{
+		"/product/pen/order/10",
+		"product pen order # 10",
+		4,
+		[]Param{
+			{":product", "product"},
+			{":name", "pen"},
+			{":order", "order"},
+			{":id", "10"},
+		},
+	},
 }
 
 func TestParserRegisterGet(t *testing.T) {
 	p := newParser()
-	for _, request := range setOfExpected {
+	for _, request := range setOfRegistered {
 		p.register(request.path, request.handle)
 	}
 	for _, exp := range setOfExpected {
@@ -72,7 +155,7 @@ func TestParserRegisterGet(t *testing.T) {
 		c := new(Control)
 		c.Set(params)
 		trw := new(testResponseWriter)
-		req, err := http.NewRequest("GET", exp.path, nil)
+		req, err := http.NewRequest("GET", "", nil)
 		if err != nil {
 			t.Error("Error creating new request")
 		}
