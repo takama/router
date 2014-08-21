@@ -104,7 +104,7 @@ Content-Length: 102
 }
 ```
 
-- Use timer to calculate the elapsed time of request handling:
+- Use timer to calculate duration of request handling:
 ```go
 func main() {
 	r := router.New()
