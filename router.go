@@ -85,12 +85,12 @@ type Router struct {
 	// NotFound is called when unknown HTTP method or a handler not found.
 	// If it is not set, http.NotFound is used.
 	// Please overwrite this if need your own NotFound handler.
-	NotFound http.HandlerFunc
+	NotFound Handle
 
 	// PanicHandler is called when panic happen.
 	// The handler prevents your server from crashing and should be used to return
 	// http status code http.StatusInternalServerError (500)
-	PanicHandler func(c *Control)
+	PanicHandler Handle
 
 	// Logger activates logging for each requests
 	Logger bool
@@ -174,8 +174,8 @@ func (r *Router) Listen(hostPort string) {
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if recovery := recover(); recovery != nil {
-			c := &Control{Request: req, Writer: w}
 			if r.PanicHandler != nil {
+				c := &Control{Request: req, Writer: w}
 				r.PanicHandler(c)
 			} else {
 				log.Println("Recovered in handler:", req.Method, req.URL.Path)
@@ -204,7 +204,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if len(allowed) == 0 {
 		if r.NotFound != nil {
-			r.NotFound(w, req)
+			c := &Control{Request: req, Writer: w}
+			r.NotFound(c)
 		} else {
 			http.NotFound(w, req)
 		}
