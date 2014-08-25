@@ -4,6 +4,9 @@ import (
 	"github.com/takama/router"
 )
 
+// Data is helper to construct JSON
+type Data map[string]interface{}
+
 func main() {
 	r := router.New()
 	r.GET("/hello/:name", func(c *router.Control) {
@@ -15,8 +18,8 @@ func main() {
 
 		// Do something
 
-		data := map[string]map[string]string{
-			"Database settings": {
+		data := Data{
+			"Database settings": Data{
 				"database": c.Get(":db"),
 				"host":     "localhost",
 				"port":     "3306",
