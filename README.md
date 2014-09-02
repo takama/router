@@ -140,7 +140,7 @@ Date: Sun, 17 Aug 2014 13:26:05 GMT
 Content-Length: 143
 
 {
-  "took": 422,
+  "took": "5.356ms",
   "data": {
     "Database settings": {
       "database": "testdb",
