@@ -2,7 +2,7 @@ Go Router
 =========
 
 A simple, compact and fast router package to process HTTP requests.
-The router package is useful to prepare a RESTful API for Go services. It has JSON output, which bind automatically for relevant type of data. The router has timer feature to display duration of request handling in the header  
+It has some sugar from framework however still lightweight. The router package is useful to prepare a RESTful API for Go services. It has JSON output, which bind automatically for relevant type of data. The router has timer feature to display duration of request handling in the header  
 
 [![Build Status](https://travis-ci.org/takama/router.png?branch=master)](https://travis-ci.org/takama/router)
 [![GoDoc](https://godoc.org/github.com/takama/router?status.svg)](https://godoc.org/github.com/takama/router)
@@ -140,7 +140,7 @@ Date: Sun, 17 Aug 2014 13:26:05 GMT
 Content-Length: 143
 
 {
-  "took": 422,
+  "took": "5.356ms",
   "data": {
     "Database settings": {
       "database": "testdb",
