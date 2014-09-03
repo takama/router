@@ -45,8 +45,9 @@ type Param struct {
 
 // Header is used to prepare a JSON header with duration triggered by UserTimer() method
 type Header struct {
-	Took string      `json:"took"`
-	Data interface{} `json:"data"`
+	Duration time.Duration `json:"duration"`
+	Took     string        `json:"took"`
+	Data     interface{}   `json:"data"`
 }
 
 // Get returns the first value associated with the given name.
@@ -87,7 +88,8 @@ func (c *Control) Body(data interface{}) {
 		content = []byte(str)
 	} else {
 		if !c.timer.IsZero() {
-			data = &Header{Took: time.Since(c.timer).String(), Data: data}
+			took := time.Now()
+			data = &Header{Duration: took.Sub(c.timer), Took: took.Sub(c.timer).String(), Data: data}
 		}
 		jsn, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
