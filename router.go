@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.2.6 provides fast HTTP request router.
+Package router 0.2.7 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -183,7 +183,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	if r.Logger {
-		log.Println(req.Method, req.URL.Path)
+		log.Println(req.RemoteAddr, req.Method, req.URL.Path)
 	}
 	if _, ok := r.handlers[req.Method]; ok {
 		if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
