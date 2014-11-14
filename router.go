@@ -183,7 +183,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	if r.Logger {
-		log.Println(req.Method, req.URL.Path)
+		log.Println(req.RemoteAddr, req.Method, req.URL.Path)
 	}
 	if _, ok := r.handlers[req.Method]; ok {
 		if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
