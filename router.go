@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.2.7 provides fast HTTP request router.
+Package router 0.2.8 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -92,8 +92,8 @@ type Router struct {
 	// http status code http.StatusInternalServerError (500)
 	PanicHandler Handle
 
-	// Logger activates logging for each requests
-	Logger bool
+	// Logger activates logging user function for each requests
+	Logger Handle
 }
 
 // Handle type is aliased to type of handler function.
@@ -182,8 +182,9 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}()
-	if r.Logger {
-		log.Println(req.RemoteAddr, req.Method, req.URL.Path)
+	if r.Logger != nil {
+		c := &Control{Request: req, Writer: w}
+		r.Logger(c)
 	}
 	if _, ok := r.handlers[req.Method]; ok {
 		if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
