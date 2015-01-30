@@ -183,6 +183,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	if r.Logger != nil {
+		c := &Control{Request: req, Writer: w}
 		r.Logger(c)
 	}
 	if _, ok := r.handlers[req.Method]; ok {
