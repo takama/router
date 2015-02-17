@@ -92,6 +92,9 @@ type Router struct {
 	// http status code http.StatusInternalServerError (500)
 	PanicHandler Handle
 
+	// CustomHandler is called allways if defined
+	CustomHandler func(Handle) Handle
+
 	// Logger activates logging user function for each requests
 	Logger Handle
 }
@@ -192,7 +195,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if len(params) > 0 {
 				c.Params = append(c.Params, params...)
 			}
-			handle(c)
+			if r.CustomHandler != nil {
+				r.CustomHandler(handle)(c)
+			} else {
+				handle(c)
+			}
 			return
 		}
 	}
