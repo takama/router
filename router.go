@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.2.8 provides fast HTTP request router.
+Package router 0.2.9 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -67,6 +67,31 @@ Checks JSON Content-Type automatically:
 		r.Listen(":8888")
 	}
 
+Custom handler with "Access-Control-Allow":
+
+	func baseHandler(handle router.Handle) router.Handle {
+		return func(c *router.Control) {
+			if origin := c.Request.Header.Get("Origin"); origin != "" {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+				c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			}
+			handle(c)
+		}
+	}
+
+	func Hello(c *router.Control) {
+		c.Body("Hello world")
+	}
+
+	func main() {
+		r := router.New()
+		r.CustomHandler = baseHandler
+		r.GET("/hello", Hello)
+
+		// Listen and serve on 0.0.0.0:8888
+		r.Listen(":8888")
+	}
+
 Go Router
 */
 package router
@@ -91,6 +116,9 @@ type Router struct {
 	// The handler prevents your server from crashing and should be used to return
 	// http status code http.StatusInternalServerError (500)
 	PanicHandler Handle
+
+	// CustomHandler is called allways if defined
+	CustomHandler func(Handle) Handle
 
 	// Logger activates logging user function for each requests
 	Logger Handle
@@ -192,7 +220,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if len(params) > 0 {
 				c.Params = append(c.Params, params...)
 			}
-			handle(c)
+			if r.CustomHandler != nil {
+				r.CustomHandler(handle)(c)
+			} else {
+				handle(c)
+			}
 			return
 		}
 	}
