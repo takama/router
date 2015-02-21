@@ -30,6 +30,9 @@ type Control struct {
 	// Code of HTTP status
 	code int
 
+	// CompactJSON propery defines JSON output format (default is not compact)
+	compactJSON bool
+
 	// Params is set of parameters
 	Params []Param
 
@@ -75,6 +78,11 @@ func (c *Control) Code(code int) *Control {
 	return c
 }
 
+// CompactJSON change JSON output format (default mode is false)
+func (c *Control) CompactJSON(mode bool) {
+	c.compactJSON = mode
+}
+
 // UseTimer allow caalculate elapsed time of request handling
 func (c *Control) UseTimer() {
 	c.timer = time.Now()
@@ -91,13 +99,17 @@ func (c *Control) Body(data interface{}) {
 			took := time.Now()
 			data = &Header{Duration: took.Sub(c.timer), Took: took.Sub(c.timer).String(), Data: data}
 		}
-		jsn, err := json.MarshalIndent(data, "", "  ")
+		var err error
+		if c.compactJSON {
+			content, err = json.Marshal(data)
+		} else {
+			content, err = json.MarshalIndent(data, "", "  ")
+		}
 		if err != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		c.Writer.Header().Add("Content-type", MIMEJSON)
-		content = jsn
 	}
 	if c.code > 0 {
 		c.Writer.WriteHeader(c.code)
