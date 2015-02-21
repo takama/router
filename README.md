@@ -109,6 +109,9 @@ Content-Length: 102
 
 - Use timer to calculate duration of request handling:
 ```go
+// Data is helper to construct JSON
+type Data map[string]interface{}
+
 func main() {
 	r := router.New()
 	r.GET("/api/v1/settings/database/:db", func(c *router.Control) {
@@ -152,10 +155,14 @@ Content-Length: 143
 }
 ```
 
-- Custom handler with "Access-Control-Allow":
+- Custom handler with "Access-Control-Allow" options and compact JSON:
 ```go
+// Data is helper to construct JSON
+type Data map[string]interface{}
+
 func baseHandler(handle router.Handle) router.Handle {
 	return func(c *router.Control) {
+		c.CompactJSON(true)
 		if origin := c.Request.Header.Get("Origin"); origin != "" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -164,14 +171,18 @@ func baseHandler(handle router.Handle) router.Handle {
 	}
 }
 
-func Hello(c *router.Control) {
-	c.Body("Hello world")
+func Info(c *router.Control) {
+	data := Data{
+		"debug": true,
+		"error": false,
+	}
+	c.Body(data)
 }
 
 func main() {
 	r := router.New()
 	r.CustomHandler = baseHandler
-	r.GET("/hello", Hello)
+	r.GET("/info", Info)
 
 	// Listen and serve on 0.0.0.0:8888
 	r.Listen(":8888")
@@ -180,16 +191,16 @@ func main() {
 
 - Check it:
 ```sh
-curl -i -H 'Origin: http://foo.com' http://localhost:8888/hello/
+curl -i -H 'Origin: http://foo.com' http://localhost:8888/info/
 
 HTTP/1.1 200 OK
 Access-Control-Allow-Credentials: true
 Access-Control-Allow-Origin: http://foo.com
 Content-Type: text/plain
 Date: Sun, 17 Aug 2014 13:27:10 GMT
-Content-Length: 11
+Content-Length: 28
 
-Hello world
+{"debug":true,"error":false}
 ```
 
 ## Author
