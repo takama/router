@@ -51,6 +51,9 @@ Serve dynamic route with parameter:
 
 Checks JSON Content-Type automatically:
 
+	// Data is helper to construct JSON
+	type Data map[string]interface{}
+
 	func main() {
 		r := router.New()
 		r.GET("/settings/database/:db", func(c *router.Control) {
@@ -67,10 +70,14 @@ Checks JSON Content-Type automatically:
 		r.Listen(":8888")
 	}
 
-Custom handler with "Access-Control-Allow":
+Custom handler with "Access-Control-Allow" options and compact JSON:
+
+	// Data is helper to construct JSON
+	type Data map[string]interface{}
 
 	func baseHandler(handle router.Handle) router.Handle {
 		return func(c *router.Control) {
+			c.CompactJSON(true)
 			if origin := c.Request.Header.Get("Origin"); origin != "" {
 				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 				c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -79,14 +86,18 @@ Custom handler with "Access-Control-Allow":
 		}
 	}
 
-	func Hello(c *router.Control) {
-		c.Body("Hello world")
+	func Info(c *router.Control) {
+		data := Data{
+			"debug": true,
+			"error": false,
+		}
+		c.Body(data)
 	}
 
 	func main() {
 		r := router.New()
 		r.CustomHandler = baseHandler
-		r.GET("/hello", Hello)
+		r.GET("/info", Info)
 
 		// Listen and serve on 0.0.0.0:8888
 		r.Listen(":8888")
