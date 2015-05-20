@@ -168,6 +168,11 @@ func (r *Router) HEAD(path string, h Handle) {
 	r.Handle("HEAD", path, h)
 }
 
+// OPTIONS is a shortcut for Router Handle("OPTIONS", path, handle)
+func (r *Router) OPTIONS(path string, h Handle) {
+	r.Handle("OPTIONS", path, h)
+}
+
 // Handle registers a new request handle with the given path and method.
 func (r *Router) Handle(method, path string, h Handle) {
 	if r.handlers[method] == nil {
@@ -200,6 +205,18 @@ func (r *Router) Lookup(method, path string) (Handle, []Param, bool) {
 		return parser.get(path)
 	}
 	return nil, nil, false
+}
+
+// AllowedMethods returns list of allowed methods
+func (r *Router) AllowedMethods(path string) []string {
+	var allowed []string
+	for method, parser := range r.handlers {
+		if _, _, ok := parser.get(path); ok {
+			allowed = append(allowed, method)
+		}
+	}
+
+	return allowed
 }
 
 // Listen and serve on requested host and port.
@@ -239,12 +256,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	allowed := make([]string, 0, len(r.handlers))
-	for method, parser := range r.handlers {
-		if _, _, ok := parser.get(req.URL.Path); ok {
-			allowed = append(allowed, method)
-		}
-	}
+	allowed := r.AllowedMethods(req.URL.Path)
 
 	if len(allowed) == 0 {
 		if r.NotFound != nil {
