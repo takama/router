@@ -5,6 +5,7 @@
 package router
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -32,6 +33,9 @@ type Control struct {
 
 	// CompactJSON propery defines JSON output format (default is not compact)
 	compactJSON bool
+
+	// gzip propery defines compressed output
+	gzip bool
 
 	// Params is set of parameters
 	Params []Param
@@ -83,6 +87,11 @@ func (c *Control) CompactJSON(mode bool) {
 	c.compactJSON = mode
 }
 
+// UseGZIP defines compressed output
+func (c *Control) UseGZIP(mode bool) {
+	c.gzip = mode
+}
+
 // UseTimer allow caalculate elapsed time of request handling
 func (c *Control) UseTimer() {
 	c.timer = time.Now()
@@ -111,8 +120,14 @@ func (c *Control) Body(data interface{}) {
 		}
 		c.Writer.Header().Add("Content-type", MIMEJSON)
 	}
-	if c.code > 0 {
+	if c.gzip {
+		c.Writer.Header().Add("Content-Encoding", "gzip")
 		c.Writer.WriteHeader(c.code)
+		gz := gzip.NewWriter(c.Writer)
+		gz.Write(content)
+		gz.Close()
+	} else {
+		c.Writer.WriteHeader(c.code)
+		c.Writer.Write(content)
 	}
-	c.Writer.Write(content)
 }
