@@ -115,12 +115,16 @@ func (c *Control) Body(data interface{}) {
 	}
 	if strings.Contains(c.Request.Header.Get("Accept-Encoding"), "gzip") {
 		c.Writer.Header().Add("Content-Encoding", "gzip")
-		c.Writer.WriteHeader(c.code)
+		if c.code > 0 {
+			c.Writer.WriteHeader(c.code)
+		}
 		gz := gzip.NewWriter(c.Writer)
 		gz.Write(content)
 		gz.Close()
 	} else {
-		c.Writer.WriteHeader(c.code)
+		if c.code > 0 {
+			c.Writer.WriteHeader(c.code)
+		}
 		c.Writer.Write(content)
 	}
 }
