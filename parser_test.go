@@ -6,6 +6,7 @@ package router
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -154,15 +155,15 @@ func TestParserRegisterGet(t *testing.T) {
 		}
 		c := new(Control)
 		c.Set(params)
-		trw := new(testResponseWriter)
+		trw := httptest.NewRecorder()
 		req, err := http.NewRequest("GET", "", nil)
 		if err != nil {
 			t.Error("Error creating new request")
 		}
 		c.Writer, c.Request = trw, req
 		handle(c)
-		if string(trw.data) != exp.data {
-			t.Error("Expected", exp.data, "got", string(trw.data))
+		if trw.Body.String() != exp.data {
+			t.Error("Expected", exp.data, "got", trw.Body.String())
 		}
 	}
 }
