@@ -167,7 +167,7 @@ func TestParserRegisterGet(t *testing.T) {
 func TestParserSplit(t *testing.T) {
 	path := []string{
 		"/api/v1/module",
-		"/api/v1/module/",
+		"/api//v1/module/",
 		"/module///name//",
 		"module//:name",
 		"/:param1/:param2/",
@@ -179,6 +179,31 @@ func TestParserSplit(t *testing.T) {
 		{"module", ":name"},
 		{":param1", ":param2"},
 	}
+
+	if part, ok := split("   "); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
+	if part, ok := split("///"); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
+	if part, ok := split("  /  //  "); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
 	for idx, p := range path {
 		parts, ok := split(p)
 		if !ok {

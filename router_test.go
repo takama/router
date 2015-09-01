@@ -13,6 +13,11 @@ func TestRouterRegisterHandlers(t *testing.T) {
 	// Create new Router
 	r := New()
 
+	// Registers GET handler for root static path
+	r.GET("/", func(c *Control) {
+		c.Body("Root")
+	})
+
 	// Registers GET handler for static path
 	r.GET("/hello", func(c *Control) {
 		c.Body("Hello")
@@ -98,6 +103,21 @@ func TestRouterRegisterHandlers(t *testing.T) {
 		}
 	} else {
 		t.Error("Path not fouund: /hello/John")
+	}
+}
+
+func TestRouterGetRootStatic(t *testing.T) {
+	response, err := http.Get("http://localhost:8888/")
+	if err != nil {
+		t.Error(err)
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	if err != nil {
+		t.Error(err)
+	}
+	if string(body) != "Root" {
+		t.Error("Expected", "Root", "got", string(body))
 	}
 }
 
