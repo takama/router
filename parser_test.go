@@ -1,11 +1,8 @@
-// Copyright 2014 Igor Dolzhikov. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package router
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -154,15 +151,15 @@ func TestParserRegisterGet(t *testing.T) {
 		}
 		c := new(Control)
 		c.Set(params)
-		trw := new(testResponseWriter)
+		trw := httptest.NewRecorder()
 		req, err := http.NewRequest("GET", "", nil)
 		if err != nil {
 			t.Error("Error creating new request")
 		}
 		c.Writer, c.Request = trw, req
 		handle(c)
-		if string(trw.data) != exp.data {
-			t.Error("Expected", exp.data, "got", string(trw.data))
+		if trw.Body.String() != exp.data {
+			t.Error("Expected", exp.data, "got", trw.Body.String())
 		}
 	}
 }
@@ -170,7 +167,7 @@ func TestParserRegisterGet(t *testing.T) {
 func TestParserSplit(t *testing.T) {
 	path := []string{
 		"/api/v1/module",
-		"/api/v1/module/",
+		"/api//v1/module/",
 		"/module///name//",
 		"module//:name",
 		"/:param1/:param2/",
@@ -182,6 +179,31 @@ func TestParserSplit(t *testing.T) {
 		{"module", ":name"},
 		{":param1", ":param2"},
 	}
+
+	if part, ok := split("   "); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
+	if part, ok := split("///"); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
+	if part, ok := split("  /  //  "); ok {
+		if len(part) != 0 {
+			t.Error("Error: split data for path '/'", part)
+		}
+	} else {
+		t.Error("Error: split data for path '/'")
+	}
+
 	for idx, p := range path {
 		parts, ok := split(p)
 		if !ok {
