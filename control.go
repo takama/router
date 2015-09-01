@@ -1,4 +1,4 @@
-// Copyright 2014 Igor Dolzhikov. All rights reserved.
+// Copyright 2015 Igor Dolzhikov. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// Default content types
 const (
 	// MIMEJSON - "Content-type" for JSON
 	MIMEJSON = "application/json"
@@ -28,6 +29,9 @@ type Control struct {
 
 	// Writer is an adapter which allows the usage of a http.ResponseWriter as standard writer
 	Writer http.ResponseWriter
+
+	// User content type
+	ContentType string
 
 	// Code of HTTP status
 	code int
@@ -93,9 +97,14 @@ func (c *Control) UseTimer() {
 // Body renders the given data into the response body
 func (c *Control) Body(data interface{}) {
 	var content []byte
+
 	if str, ok := data.(string); ok {
-		c.Writer.Header().Add("Content-type", MIMETEXT)
 		content = []byte(str)
+		if c.ContentType != "" {
+			c.Writer.Header().Add("Content-type", c.ContentType)
+		} else {
+			c.Writer.Header().Add("Content-type", MIMETEXT)
+		}
 	} else {
 		if !c.timer.IsZero() {
 			took := time.Now()
