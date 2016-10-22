@@ -47,10 +47,9 @@ type Control struct {
 
 	// errors
 	errorHeader ErrorHeader
-	errors      []Error
 
-	// Params is set of parameters
-	Params []Param
+	// params is set of key/value parameters
+	params []Param
 
 	// timer used to calculate a elapsed time for handler and writing it in a response
 	timer time.Time
@@ -58,8 +57,8 @@ type Control struct {
 
 // Param is a URL parameter which represents as key and value.
 type Param struct {
-	Key   string
-	Value string
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 // Header is used to prepare a JSON header with meta data
@@ -75,15 +74,18 @@ type Header struct {
 	Error      interface{}   `json:"error,omitempty"`
 }
 
+// ErrorHeader contains error code, message and array of specified error reports
 type ErrorHeader struct {
-	Code    uint16      `json:"code,omitempty"`
-	Message string      `json:"message,omitempty"`
-	Errors  interface{} `json:"errors,omitempty"`
+	Code    uint16  `json:"code,omitempty"`
+	Message string  `json:"message,omitempty"`
+	Errors  []Error `json:"errors,omitempty"`
 }
 
+// Error report format
 type Error struct {
 	Domain       string `json:"domain,omitempty"`
 	Reason       string `json:"reason,omitempty"`
+	Message      string `json:"message,omitempty"`
 	Location     string `json:"location,omitempty"`
 	LocationType string `json:"locationType,omitempty"`
 	ExtendedHelp string `json:"extendedHelp,omitempty"`
@@ -93,9 +95,9 @@ type Error struct {
 // Get returns the first value associated with the given name.
 // If there are no values associated with the key, an empty string is returned.
 func (c *Control) Get(name string) string {
-	for idx := range c.Params {
-		if c.Params[idx].Key == name {
-			return c.Params[idx].Value
+	for idx := range c.params {
+		if c.params[idx].Key == name {
+			return c.params[idx].Value
 		}
 	}
 
@@ -103,8 +105,9 @@ func (c *Control) Get(name string) string {
 }
 
 // Set adds new parameters which represents as set of key/value.
-func (c *Control) Set(params []Param) {
-	c.Params = append(c.Params, params...)
+func (c *Control) Set(params ...Param) *Control {
+	c.params = append(c.params, params...)
+	return c
 }
 
 // Code assigns http status code, which returns on http request
@@ -155,6 +158,13 @@ func (c *Control) Method(method string) *Control {
 	return c
 }
 
+// AlternativeParams add params meta data in alternative format
+func (c *Control) AlternativeParams(params interface{}) *Control {
+	c.useMetaData = true
+	c.header.Params = params
+	return c
+}
+
 func (c *Control) produceError(code uint16, message string) *Control {
 	c.useMetaData = true
 	c.errorHeader.Code = code
@@ -164,7 +174,7 @@ func (c *Control) produceError(code uint16, message string) *Control {
 
 func (c *Control) AddError(errors ...Error) *Control {
 	c.useMetaData = true
-	c.errors = append(c.errors, errors...)
+	c.errorHeader.Errors = append(c.errorHeader.Errors, errors...)
 	return c
 }
 
@@ -193,13 +203,10 @@ func (c *Control) Body(data interface{}) {
 				c.header.Duration = took.Sub(c.timer)
 				c.header.Took = took.Sub(c.timer).String()
 			}
-			if len(c.Params) > 0 {
-				c.header.Params = c.Params
+			if c.header.Params == nil && len(c.params) > 0 {
+				c.header.Params = c.params
 			}
-			if c.errorHeader.Code != 0 || c.errorHeader.Message != "" || len(c.errors) > 0 {
-				if len(c.errors) > 0 {
-					c.errorHeader.Errors = c.errors
-				}
+			if c.errorHeader.Code != 0 || c.errorHeader.Message != "" || len(c.errorHeader.Errors) > 0 {
 				c.header.Error = c.errorHeader
 			}
 			data = c.header
