@@ -1,22 +1,38 @@
 package router
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-var parameters = []Param{
+var params = []Param{
 	{"name", "John"},
 	{"age", "32"},
 	{"gender", "M"},
 }
 
-func TestControlSetGet(t *testing.T) {
+var testParamsData = `[
+  {
+    "key": "name",
+    "value": "John"
+  },
+  {
+    "key": "age",
+    "value": "32"
+  },
+  {
+    "key": "gender",
+    "value": "M"
+  }
+]`
+
+func TestControlParamsSetGet(t *testing.T) {
 
 	c := new(Control)
-	c.Set(parameters)
-	for _, param := range parameters {
+	c.Set(params...)
+	for _, param := range params {
 		if c.Get(param.Key) != param.Value {
 			t.Error("Expected for", param.Key, ":", param.Value, ", got", c.Get(param.Key))
 		}
@@ -33,6 +49,92 @@ func TestControlCode(t *testing.T) {
 	c.Code(404)
 	if c.code != 404 {
 		t.Error("Expected code", "404", "got", c.code)
+	}
+}
+
+func TestMetaData(t *testing.T) {
+	req, err := http.NewRequest("GET", "module/:data", nil)
+	if err != nil {
+		t.Error("Error creting new request")
+	}
+	hd := Header{
+		APIVersion: "2.1",
+	}
+	c := new(Control)
+	c.CompactJSON(true).UseMetaData()
+	trw := httptest.NewRecorder()
+	c.Writer, c.Request = trw, req
+	c.APIVersion(hd.APIVersion).Context(hd.Context).Body(nil)
+	if content, err := json.Marshal(hd); err == nil {
+		if trw.Body.String() != string(content) {
+			t.Error("Expected", string(content), "got", trw.Body.String())
+		}
+	} else {
+		t.Error(err)
+	}
+	trw = httptest.NewRecorder()
+	c.Writer = trw
+	hd.Context = "bart"
+	hd.Method = "people.get"
+	hd.ID = "id17"
+	params := []Param{Param{Key: "userId", Value: "@me"}, Param{Key: "groupId", Value: "@self"}}
+	hd.Params = params
+	c.Set(params...).Context(hd.Context).Method(hd.Method).ID(hd.ID).Body(nil)
+	if content, err := json.Marshal(hd); err == nil {
+		if trw.Body.String() != string(content) {
+			t.Error("Expected", string(content), "got", trw.Body.String())
+		}
+	} else {
+		t.Error(err)
+	}
+	trw = httptest.NewRecorder()
+	c.Writer = trw
+	altParams := map[string]string{"userId": "@me", "groupId": "@self"}
+	hd.Params = altParams
+	c.AlternativeParams(altParams).Body(nil)
+	if content, err := json.Marshal(hd); err == nil {
+		if trw.Body.String() != string(content) {
+			t.Error("Expected", string(content), "got", trw.Body.String())
+		}
+	} else {
+		t.Error(err)
+	}
+}
+
+func TestErrorData(t *testing.T) {
+	req, err := http.NewRequest("GET", "module/:data", nil)
+	if err != nil {
+		t.Error("Error creting new request")
+	}
+	ed := ErrorHeader{
+		Code:    http.StatusBadRequest,
+		Message: "Unexpected parameter :data",
+	}
+	c := new(Control)
+	c.CompactJSON(true)
+	trw := httptest.NewRecorder()
+	c.Writer, c.Request = trw, req
+	c.produceError(ed.Code, ed.Message).Body(nil)
+	if content, err := json.Marshal(map[string]ErrorHeader{"error": ed}); err == nil {
+		if trw.Body.String() != string(content) {
+			t.Error("Expected", string(content), "got", trw.Body.String())
+		}
+	} else {
+		t.Error(err)
+	}
+	trw = httptest.NewRecorder()
+	c.Writer = trw
+	errors := []Error{
+		Error{Message: "File Not Found"},
+	}
+	ed.Errors = errors
+	c.AddError(errors...).Body(nil)
+	if content, err := json.Marshal(map[string]ErrorHeader{"error": ed}); err == nil {
+		if trw.Body.String() != string(content) {
+			t.Error("Expected", string(content), "got", trw.Body.String())
+		}
+	} else {
+		t.Error(err)
 	}
 }
 
@@ -62,23 +164,8 @@ func TestControlBody(t *testing.T) {
 	}
 	trw = httptest.NewRecorder()
 	c.Writer = trw
-	c.Body(parameters)
-	if trw.Body.String() != testJSONData {
-		t.Error("Expected", testJSONData, "got", trw.Body.String())
+	c.Body(params)
+	if trw.Body.String() != testParamsData {
+		t.Error("Expected", testParamsData, "got", trw.Body.String())
 	}
 }
-
-var testJSONData = `[
-  {
-    "Key": "name",
-    "Value": "John"
-  },
-  {
-    "Key": "age",
-    "Value": "32"
-  },
-  {
-    "Key": "gender",
-    "Value": "M"
-  }
-]`
