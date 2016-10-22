@@ -246,7 +246,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
 			c := &Control{Request: req, Writer: w}
 			if len(params) > 0 {
-				c.Params = append(c.Params, params...)
+				c.params = append(c.params, params...)
 			}
 			if r.CustomHandler != nil {
 				r.CustomHandler(handle)(c)
