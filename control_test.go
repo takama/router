@@ -91,7 +91,7 @@ func TestMetaData(t *testing.T) {
 	c.Writer = trw
 	altParams := map[string]string{"userId": "@me", "groupId": "@self"}
 	hd.Params = altParams
-	c.AlternativeParams(altParams).Body(nil)
+	c.SetParams(altParams).Body(nil)
 	if content, err := json.Marshal(hd); err == nil {
 		if trw.Body.String() != string(content) {
 			t.Error("Expected", string(content), "got", trw.Body.String())
@@ -114,7 +114,7 @@ func TestErrorData(t *testing.T) {
 	c.CompactJSON(true)
 	trw := httptest.NewRecorder()
 	c.Writer, c.Request = trw, req
-	c.produceError(ed.Code, ed.Message).Body(nil)
+	c.SetError(ed.Code, ed.Message).Body(nil)
 	if content, err := json.Marshal(map[string]ErrorHeader{"error": ed}); err == nil {
 		if trw.Body.String() != string(content) {
 			t.Error("Expected", string(content), "got", trw.Body.String())

@@ -158,14 +158,14 @@ func (c *Control) Method(method string) *Control {
 	return c
 }
 
-// AlternativeParams add params meta data in alternative format
-func (c *Control) AlternativeParams(params interface{}) *Control {
+// SetParams add params meta data in alternative format
+func (c *Control) SetParams(params interface{}) *Control {
 	c.useMetaData = true
 	c.header.Params = params
 	return c
 }
 
-func (c *Control) produceError(code uint16, message string) *Control {
+func (c *Control) SetError(code uint16, message string) *Control {
 	c.useMetaData = true
 	c.errorHeader.Code = code
 	c.errorHeader.Message = message

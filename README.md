@@ -44,6 +44,12 @@ Hello world
 
 - Serve dynamic route with parameter:
 ```go
+package main
+
+import (
+	"github.com/takama/router"
+)
+
 func main() {
 	r := router.New()
 	r.GET("/hello/:name", func(c *router.Control) {
@@ -69,6 +75,12 @@ Hello John
 
 - Checks JSON Content-Type automatically:
 ```go
+package main
+
+import (
+	"github.com/takama/router"
+)
+
 // Data is helper to construct JSON
 type Data map[string]interface{}
 
@@ -109,6 +121,12 @@ Content-Length: 102
 
 - Use timer to calculate duration of request handling:
 ```go
+package main
+
+import (
+	"github.com/takama/router"
+)
+
 // Data is helper to construct JSON
 type Data map[string]interface{}
 
@@ -157,6 +175,12 @@ Content-Length: 143
 
 - Custom handler with "Access-Control-Allow" options and compact JSON:
 ```go
+package main
+
+import (
+	"github.com/takama/router"
+)
+
 // Data is helper to construct JSON
 type Data map[string]interface{}
 
@@ -201,6 +225,59 @@ Date: Sun, 17 Aug 2014 13:27:10 GMT
 Content-Length: 28
 
 {"debug":true,"error":false}
+```
+
+- Use google json style `https://google.github.io/styleguide/jsoncstyleguide.xml`:
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/takama/router"
+)
+
+func main() {
+	r := router.New()
+	r.GET("/api/v1/people/:action/:id", func(c *router.Control) {
+
+		// Do something
+
+		c.Method("people." + c.Get(":action"))
+		c.SetParams(map[string]string{"userId": c.Get(":id")})
+		c.SetError(http.StatusNotFound, "UserId not found")
+		c.AddError(router.Error{Message: "Group or User not found"})
+		c.Code(http.StatusNotFound).Body(nil)
+	})
+	// Listen and serve on 0.0.0.0:8888
+	r.Listen(":8888")
+}
+```
+
+- Check it:
+```sh
+curl -i http://localhost:8888/api/v1/people/get/@me
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Date: Sat, 22 Oct 2016 14:50:00 GMT
+Content-Length: 220
+
+{
+  "method": "people.get",
+  "params": {
+    "userId": "@me"
+  },
+  "error": {
+    "code": 404,
+    "message": "UserId not found",
+    "errors": [
+      {
+        "message": "Group or User not found"
+      }
+    ]
+  }
+}
 ```
 
 ## Author
