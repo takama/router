@@ -103,6 +103,25 @@ Custom handler with "Access-Control-Allow" options and compact JSON:
 		r.Listen(":8888")
 	}
 
+Use google json style `https://google.github.io/styleguide/jsoncstyleguide.xml`
+
+	func main() {
+		r := router.New()
+		r.GET("/api/v1/people/:action/:id", func(c *router.Control) {
+
+			// Do something
+
+			c.Method("people." + c.Get(":action"))
+			c.SetParams(map[string]string{"userId": c.Get(":id")})
+			c.SetError(http.StatusNotFound, "UserId not found")
+			c.AddError(router.Error{Message: "Group or User not found"})
+			c.Code(http.StatusNotFound).Body(nil)
+		})
+		// Listen and serve on 0.0.0.0:8888
+		r.Listen(":8888")
+	}
+
+
 Go Router
 */
 package router
