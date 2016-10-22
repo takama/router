@@ -150,7 +150,7 @@ func TestParserRegisterGet(t *testing.T) {
 			t.Error("Expected length of param", exp.paramCount, "got", len(params))
 		}
 		c := new(Control)
-		c.Set(params)
+		c.Set(params...)
 		trw := httptest.NewRecorder()
 		req, err := http.NewRequest("GET", "", nil)
 		if err != nil {
