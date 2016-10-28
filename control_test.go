@@ -55,7 +55,7 @@ func TestControlCode(t *testing.T) {
 func TestMetaData(t *testing.T) {
 	req, err := http.NewRequest("GET", "module/:data", nil)
 	if err != nil {
-		t.Error("Error creting new request")
+		t.Error(err)
 	}
 	hd := Header{
 		APIVersion: "2.1",
@@ -104,7 +104,7 @@ func TestMetaData(t *testing.T) {
 func TestErrorData(t *testing.T) {
 	req, err := http.NewRequest("GET", "module/:data", nil)
 	if err != nil {
-		t.Error("Error creting new request")
+		t.Error(err)
 	}
 	ed := ErrorHeader{
 		Code:    http.StatusBadRequest,
@@ -141,7 +141,7 @@ func TestErrorData(t *testing.T) {
 func TestControlBody(t *testing.T) {
 	req, err := http.NewRequest("GET", "hello/:name", nil)
 	if err != nil {
-		t.Error("Error creting new request")
+		t.Error(err)
 	}
 	c := new(Control)
 	trw := httptest.NewRecorder()
