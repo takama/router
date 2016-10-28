@@ -4,14 +4,17 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
+var r = New()
+
 func TestRouterRegisterHandlers(t *testing.T) {
 
 	// Create new Router
-	r := New()
+	//	r := New()
 
 	// Registers GET handler for root static path
 	r.GET("/", func(c *Control) {
@@ -72,9 +75,6 @@ func TestRouterRegisterHandlers(t *testing.T) {
 		c.Code(http.StatusInternalServerError).Body("Internal Server Error")
 	}
 
-	// Listen and serve handlers
-	go r.Listen(":8888")
-
 	// Checks parameters for static path method
 	if handle, params, ok := r.Lookup("GET", "/hello"); ok {
 		if handle == nil {
@@ -107,137 +107,100 @@ func TestRouterRegisterHandlers(t *testing.T) {
 }
 
 func TestRouterGetRootStatic(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/")
+	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Root" {
-		t.Error("Expected", "Root", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Root" {
+		t.Error("Expected", "Root", "got", trw.Body.String())
 	}
 }
 
 func TestRouterGetStatic(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/hello")
+	req, err := http.NewRequest("GET", "/hello", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Hello" {
-		t.Error("Expected", "Hello", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Hello" {
+		t.Error("Expected", "Hello", "got", trw.Body.String())
 	}
 }
 
 func TestRouterGetParameter(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/hello/John")
+	req, err := http.NewRequest("GET", "/hello/John", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Hello John" {
-		t.Error("Expected", "Hello John", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Hello John" {
+		t.Error("Expected", "Hello John", "got", trw.Body.String())
 	}
 }
 
 func TestRouterGetParameterFromClassicUrl(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/users/Jane/?name=Joe")
+	req, err := http.NewRequest("GET", "/users/Jane/?name=Joe", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Users: Jane Joe" {
-		t.Error("Expected", "Users: Jane Joe", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Users: Jane Joe" {
+		t.Error("Expected", "Users: Jane Joe", "got", trw.Body.String())
 	}
 }
 
 func TestRouterPostJSONData(t *testing.T) {
-	reader := strings.NewReader(`{"name": "Tom"}`)
-	response, err := http.Post("http://localhost:8888/users/", MIMEJSON, reader)
+	req, err := http.NewRequest("POST", "/users/", strings.NewReader(`{"name": "Tom"}`))
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "User: Tom" {
+		t.Error("Expected", "User: Tom", "got", trw.Body.String())
 	}
-	if string(body) != "User: Tom" {
-		t.Error("Expected", "User: Tom", "got", string(body))
-	}
-
 }
 
 func TestRouterPutJSONData(t *testing.T) {
-	reader := strings.NewReader(`{"name1": "user1", "name2": "user2"}`)
-	client := new(http.Client)
-	req, err := http.NewRequest("PUT", "http://localhost:8888/users/", reader)
+	req, err := http.NewRequest("PUT", "/users/", strings.NewReader(`{"name1": "user1", "name2": "user2"}`))
 	if err != nil {
 		t.Error(err)
 	}
-	response, err := client.Do(req)
-	if err != nil {
-		t.Error(err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Users: user1 user2" {
-		t.Error("Expected", "Users: user1 user2", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Users: user1 user2" {
+		t.Error("Expected", "Users: user1 user2", "got", trw.Body.String())
 	}
 }
 
 func TestRouterDelete(t *testing.T) {
-	client := new(http.Client)
-	req, err := http.NewRequest("DELETE", "http://localhost:8888/users/", nil)
+	req, err := http.NewRequest("DELETE", "/users/", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	response, err := client.Do(req)
-	if err != nil {
-		t.Error(err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
-	}
-	if string(body) != "Users deleted" {
-		t.Error("Users deleted", "got", string(body))
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Users deleted" {
+		t.Error("Expected", "Users deleted", "got", trw.Body.String())
 	}
 }
 
 func TestRouterAllowedMethod(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/users")
+	req, err := http.NewRequest("GET", "/users", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-	if err != nil {
-		t.Error(err)
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Body.String() != "Method Not Allowed\n" {
+		t.Error("Expected", "Method Not Allowed", "got", trw.Body.String())
 	}
-	if string(body) != "Method Not Allowed\n" {
-		t.Error("Expected", "Method Not Allowed", "got", string(body))
-	}
-	methods := strings.Split(response.Header.Get("Allow"), ", ")
+	methods := strings.Split(trw.Header().Get("Allow"), ", ")
 	expected := "POST, PUT, DELETE"
 	for _, method := range methods {
 		if !strings.Contains("POST, PUT, DELETE", method) {
@@ -247,22 +210,26 @@ func TestRouterAllowedMethod(t *testing.T) {
 }
 
 func TestRouterNotFound(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/test")
+	req, err := http.NewRequest("GET", "/test", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	if response.StatusCode != http.StatusNotFound {
-		t.Error("Expected", http.StatusNotFound, "got", response.StatusCode)
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Code != http.StatusNotFound {
+		t.Error("Expected", http.StatusNotFound, "got", trw.Code)
 	}
 
 }
 
 func TestRouterPanic(t *testing.T) {
-	response, err := http.Get("http://localhost:8888/panic")
+	req, err := http.NewRequest("GET", "/panic", nil)
 	if err != nil {
 		t.Error(err)
 	}
-	if response.StatusCode != http.StatusInternalServerError {
-		t.Error("Expected", http.StatusInternalServerError, "got", response.StatusCode)
+	trw := httptest.NewRecorder()
+	r.ServeHTTP(trw, req)
+	if trw.Code != http.StatusInternalServerError {
+		t.Error("Expected", http.StatusInternalServerError, "got", trw.Code)
 	}
 }
