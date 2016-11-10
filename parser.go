@@ -10,6 +10,7 @@ import (
 
 const (
 	maxLevel = 255
+	asterisk = "*"
 )
 
 type parser struct {
@@ -37,6 +38,9 @@ func newParser() *parser {
 }
 
 func (p *parser) register(path string, handle Handle) bool {
+	if trim(path, " ") == asterisk {
+		p.static[asterisk] = handle
+	}
 	if parts, ok := split(path); ok {
 		var static, dynamic uint16
 		for _, value := range parts {
@@ -60,6 +64,9 @@ func (p *parser) register(path string, handle Handle) bool {
 }
 
 func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
+	if handle, ok := p.static[asterisk]; ok {
+		return handle, nil, true
+	}
 	if handle, ok := p.static[path]; ok {
 		return handle, nil, true
 	}
