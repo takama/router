@@ -198,6 +198,11 @@ func (r *Router) OPTIONS(path string, h Handle) {
 	r.Handle("OPTIONS", path, h)
 }
 
+// PATCH is a shortcut for router.Handle("PATCH", path, handle)
+func (r *Router) PATCH(path string, handle Handle) {
+	r.Handle("PATCH", path, handle)
+}
+
 // Handle registers a new request handle with the given path and method.
 func (r *Router) Handle(method, path string, h Handle) {
 	if r.handlers[method] == nil {
