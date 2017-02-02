@@ -80,14 +80,14 @@ func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
 		if handle, ok := p.static["/"+join(parts)]; ok {
 			return handle, nil, true
 		}
-		// try to match wildcard route
-		if handle, result, ok := parseParams(p.wildcard, parts); ok {
-			return handle, result, ok
-		}
 		if data := p.fields[uint8(len(parts))]; data != nil {
 			if handle, result, ok := parseParams(data, parts); ok {
 				return handle, result, ok
 			}
+		}
+		// try to match wildcard route
+		if handle, result, ok := parseParams(p.wildcard, parts); ok {
+			return handle, result, ok
 		}
 	}
 
@@ -206,4 +206,21 @@ func parseParams(data records, parts []string) (handle Handle, result []Param, o
 	}
 
 	return nil, nil, false
+}
+
+func (p *parser) paths() []string {
+	var paths []string
+	for path := range p.static {
+		paths = append(paths, path)
+	}
+	for _, records := range p.fields {
+		for _, record := range records {
+			paths = append(paths, "/"+join(record.parts))
+		}
+	}
+	for _, record := range p.wildcard {
+		paths = append(paths, "/"+join(record.parts))
+	}
+
+	return paths
 }

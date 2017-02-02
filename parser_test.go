@@ -141,12 +141,6 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/static/greetings",
-		"Hello from star static path",
-		0,
-		[]Param{},
-	},
-	{
 		"/static/greetings/something",
 		"Hello from star static path",
 		0,
