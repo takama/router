@@ -81,11 +81,11 @@ func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
 			return handle, nil, true
 		}
 		// try to match wildcard route
-		if handle, result, ok := findHandle(p.wildcard, parts); ok {
+		if handle, result, ok := parseParams(p.wildcard, parts); ok {
 			return handle, result, ok
 		}
 		if data := p.fields[uint8(len(parts))]; data != nil {
-			if handle, result, ok := findHandle(data, parts); ok {
+			if handle, result, ok := parseParams(data, parts); ok {
 				return handle, result, ok
 			}
 		}
@@ -183,7 +183,7 @@ func explode(s string) []string {
 	return a[0 : na+1]
 }
 
-func findHandle(data records, parts []string) (handle Handle, result []Param, ok bool) {
+func parseParams(data records, parts []string) (handle Handle, result []Param, ok bool) {
 	for _, nds := range data {
 		values := nds.parts
 		result = nil
