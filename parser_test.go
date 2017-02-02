@@ -67,6 +67,12 @@ var setOfRegistered = []registered{
 			c.Body("Hello from star static path")
 		},
 	},
+	{
+		"/files/:dir/*",
+		func(c *Control) {
+			c.Body(c.Get(":dir"))
+		},
+	},
 }
 
 var setOfExpected = []expected{
@@ -145,6 +151,22 @@ var setOfExpected = []expected{
 		"Hello from star static path",
 		0,
 		[]Param{},
+	},
+	{
+		"/files/css/style.css",
+		"css",
+		1,
+		[]Param{
+			{":dir", "css"},
+		},
+	},
+	{
+		"/files/js/app.js",
+		"js",
+		1,
+		[]Param{
+			{":dir", "js"},
+		},
 	},
 }
 
