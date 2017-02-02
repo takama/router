@@ -6,6 +6,9 @@ package router
 
 import (
 	"sort"
+	"strings"
+
+	"github.com/takama/router/doublestar"
 )
 
 const (
@@ -14,8 +17,9 @@ const (
 )
 
 type parser struct {
-	fields map[uint8]records
-	static map[string]Handle
+	fields   map[uint8]records
+	static   map[string]Handle
+	wildcard map[string]Handle
 }
 
 type record struct {
@@ -32,14 +36,18 @@ func (n records) Less(i, j int) bool { return n[i].key < n[j].key }
 
 func newParser() *parser {
 	return &parser{
-		fields: make(map[uint8]records),
-		static: make(map[string]Handle),
+		fields:   make(map[uint8]records),
+		static:   make(map[string]Handle),
+		wildcard: make(map[string]Handle),
 	}
 }
 
 func (p *parser) register(path string, handle Handle) bool {
 	if trim(path, " ") == asterisk {
 		p.static[asterisk] = handle
+	}
+	if strings.HasSuffix(path, asterisk) {
+		p.wildcard[path] = handle
 	}
 	if parts, ok := split(path); ok {
 		var static, dynamic uint16
@@ -69,6 +77,20 @@ func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
 	}
 	if handle, ok := p.static[path]; ok {
 		return handle, nil, true
+	}
+	for wildcard, handle := range p.wildcard {
+		if ok, _ := doublestar.Match(wildcard, path); ok {
+			return handle, nil, true
+		}
+		suffixes := []string{"/" + asterisk, "/" + asterisk + asterisk}
+		for _, suffix := range suffixes {
+			if strings.HasSuffix(wildcard, suffix) {
+				wildcard = wildcard[:len(wildcard)-len(suffix)]
+			}
+		}
+		if wildcard == path {
+			return handle, nil, true
+		}
 	}
 	if parts, ok := split(path); ok {
 		if handle, ok := p.static["/"+join(parts)]; ok {

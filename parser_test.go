@@ -61,6 +61,12 @@ var setOfRegistered = []registered{
 			c.Body(c.Get(":product") + " " + c.Get(":name") + " " + c.Get(":order") + " # " + c.Get(":id"))
 		},
 	},
+	{
+		"/static/**",
+		func(c *Control) {
+			c.Body("Hello from wildcard static path")
+		},
+	},
 }
 
 var setOfExpected = []expected{
@@ -133,6 +139,12 @@ var setOfExpected = []expected{
 			{":order", "order"},
 			{":id", "10"},
 		},
+	},
+	{
+		"/static/greetings",
+		"Hello from wildcard static path",
+		0,
+		[]Param{},
 	},
 }
 
