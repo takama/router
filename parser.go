@@ -6,9 +6,6 @@ package router
 
 import (
 	"sort"
-	"strings"
-
-	"github.com/takama/router/doublestar"
 )
 
 const (
@@ -19,7 +16,7 @@ const (
 type parser struct {
 	fields   map[uint8]records
 	static   map[string]Handle
-	wildcard map[string]Handle
+	wildcard records
 }
 
 type record struct {
@@ -38,7 +35,7 @@ func newParser() *parser {
 	return &parser{
 		fields:   make(map[uint8]records),
 		static:   make(map[string]Handle),
-		wildcard: make(map[string]Handle),
+		wildcard: records{},
 	}
 }
 
@@ -46,19 +43,20 @@ func (p *parser) register(path string, handle Handle) bool {
 	if trim(path, " ") == asterisk {
 		p.static[asterisk] = handle
 	}
-	if strings.Contains(path, asterisk) {
-		p.wildcard[path] = handle
-	}
 	if parts, ok := split(path); ok {
-		var static, dynamic uint16
+		var static, dynamic, wildcard uint16
 		for _, value := range parts {
 			if len(value) >= 1 && value[0:1] == ":" {
 				dynamic++
+			} else if len(value) == 1 && value == "*" {
+				wildcard++
 			} else {
 				static++
 			}
 		}
-		if dynamic == 0 {
+		if wildcard > 0 {
+			p.wildcard = append(p.wildcard, &record{key: dynamic<<8 + static, handle: handle, parts: parts})
+		} else if dynamic == 0 {
 			p.static["/"+join(parts)] = handle
 		} else {
 			level := uint8(len(parts))
@@ -78,42 +76,17 @@ func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
 	if handle, ok := p.static[path]; ok {
 		return handle, nil, true
 	}
-	for wildcard, handle := range p.wildcard {
-		if ok, _ := doublestar.Match(wildcard, path); ok {
-			return handle, nil, true
-		}
-		suffixes := []string{"/" + asterisk, "/" + asterisk + asterisk}
-		for _, suffix := range suffixes {
-			if strings.HasSuffix(wildcard, suffix) {
-				wildcard = wildcard[:len(wildcard)-len(suffix)]
-			}
-		}
-		if wildcard == path {
-			return handle, nil, true
-		}
-	}
 	if parts, ok := split(path); ok {
 		if handle, ok := p.static["/"+join(parts)]; ok {
 			return handle, nil, true
 		}
+		// try to match wildcard route
+		if handle, result, ok := findHandle(p.wildcard, parts); ok {
+			return handle, result, ok
+		}
 		if data := p.fields[uint8(len(parts))]; data != nil {
-			for _, nds := range data {
-				values := nds.parts
-				result = nil
-				found := true
-				for idx, value := range values {
-					if value != parts[idx] && !(len(value) >= 1 && value[0:1] == ":") {
-						found = false
-						break
-					} else {
-						if len(value) >= 1 && value[0:1] == ":" {
-							result = append(result, Param{Key: value, Value: parts[idx]})
-						}
-					}
-				}
-				if found {
-					return nds.handle, result, true
-				}
+			if handle, result, ok := findHandle(data, parts); ok {
+				return handle, result, ok
 			}
 		}
 	}
@@ -208,4 +181,29 @@ func explode(s string) []string {
 	}
 	a[na] = s[start:]
 	return a[0 : na+1]
+}
+
+func findHandle(data records, parts []string) (handle Handle, result []Param, ok bool) {
+	for _, nds := range data {
+		values := nds.parts
+		result = nil
+		found := true
+		for idx, value := range values {
+			if len(value) == 1 && value == "*" {
+				break
+			} else if value != parts[idx] && !(len(value) >= 1 && value[0:1] == ":") {
+				found = false
+				break
+			} else {
+				if len(value) >= 1 && value[0:1] == ":" {
+					result = append(result, Param{Key: value, Value: parts[idx]})
+				}
+			}
+		}
+		if found {
+			return nds.handle, result, true
+		}
+	}
+
+	return nil, nil, false
 }
