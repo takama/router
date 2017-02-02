@@ -6,6 +6,7 @@ package router
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -23,6 +24,9 @@ const (
 // Control allows us to pass variables between middleware,
 // assign Http codes and render a Body.
 type Control struct {
+
+	// Context embedded
+	context.Context
 
 	// Request is an adapter which allows the usage of a http.Request as standard request
 	Request *http.Request
@@ -118,7 +122,7 @@ func (c *Control) Code(code int) *Control {
 	return c
 }
 
-// CompactJSON change JSON output format (default mode is false)
+// CompactJSON changes JSON output format (default mode is false)
 func (c *Control) CompactJSON(mode bool) *Control {
 	c.compactJSON = mode
 	return c
@@ -130,41 +134,42 @@ func (c *Control) UseMetaData() *Control {
 	return c
 }
 
-// APIVersion add API version meta data
+// APIVersion adds API version meta data
 func (c *Control) APIVersion(version string) *Control {
 	c.useMetaData = true
 	c.header.APIVersion = version
 	return c
 }
 
-// Context add context meta data
-func (c *Control) Context(context string) *Control {
+// HeaderContext adds context meta data
+func (c *Control) HeaderContext(context string) *Control {
 	c.useMetaData = true
 	c.header.Context = context
 	return c
 }
 
-// ID add id meta data
+// ID adds id meta data
 func (c *Control) ID(id string) *Control {
 	c.useMetaData = true
 	c.header.ID = id
 	return c
 }
 
-// Method add method meta data
+// Method adds method meta data
 func (c *Control) Method(method string) *Control {
 	c.useMetaData = true
 	c.header.Method = method
 	return c
 }
 
-// SetParams add params meta data in alternative format
+// SetParams adds params meta data in alternative format
 func (c *Control) SetParams(params interface{}) *Control {
 	c.useMetaData = true
 	c.header.Params = params
 	return c
 }
 
+// SetError sets error code and error message
 func (c *Control) SetError(code uint16, message string) *Control {
 	c.useMetaData = true
 	c.errorHeader.Code = code
@@ -172,13 +177,14 @@ func (c *Control) SetError(code uint16, message string) *Control {
 	return c
 }
 
+// AddError adds new error
 func (c *Control) AddError(errors ...Error) *Control {
 	c.useMetaData = true
 	c.errorHeader.Errors = append(c.errorHeader.Errors, errors...)
 	return c
 }
 
-// UseTimer allow caalculate elapsed time of request handling
+// UseTimer allows caalculate elapsed time of request handling
 func (c *Control) UseTimer() {
 	c.useMetaData = true
 	c.timer = time.Now()
