@@ -62,9 +62,21 @@ var setOfRegistered = []registered{
 		},
 	},
 	{
+		"/files/*/test.css",
+		func(c *Control) {
+			c.Body("Hello from star-in-the-middle static path")
+		},
+	},
+	{
+		"/graph/**/node",
+		func(c *Control) {
+			c.Body("Hello from double-star-in-the-middle static path")
+		},
+	},
+	{
 		"/static/**",
 		func(c *Control) {
-			c.Body("Hello from wildcard static path")
+			c.Body("Hello from star static path")
 		},
 	},
 }
@@ -141,8 +153,20 @@ var setOfExpected = []expected{
 		},
 	},
 	{
+		"/files/common/test.css",
+		"Hello from star-in-the-middle static path",
+		0,
+		[]Param{},
+	},
+	{
+		"/graph/node/relation/node",
+		"Hello from double-star-in-the-middle static path",
+		0,
+		[]Param{},
+	},
+	{
 		"/static/greetings",
-		"Hello from wildcard static path",
+		"Hello from star static path",
 		0,
 		[]Param{},
 	},

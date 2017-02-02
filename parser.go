@@ -46,7 +46,7 @@ func (p *parser) register(path string, handle Handle) bool {
 	if trim(path, " ") == asterisk {
 		p.static[asterisk] = handle
 	}
-	if strings.HasSuffix(path, asterisk) {
+	if strings.Contains(path, asterisk) {
 		p.wildcard[path] = handle
 	}
 	if parts, ok := split(path); ok {
