@@ -280,11 +280,10 @@ Content-Length: 220
 }
 ```
 
-## Author
+## Contributors (unsorted)
 
-[Igor Dolzhikov](https://github.com/takama)
-
-## Contributors
+- [Igor Dolzhikov](https://github.com/takama)
+- [Yaroslav Lukyanov](https://github.com/CSharpRU)
 
 All the contributors are welcome. If you would like to be the contributor please accept some rules.
 - The pull requests will be accepted only in "develop" branch
