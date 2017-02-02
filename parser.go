@@ -42,6 +42,8 @@ func newParser() *parser {
 func (p *parser) register(path string, handle Handle) bool {
 	if trim(path, " ") == asterisk {
 		p.static[asterisk] = handle
+
+		return true
 	}
 	if parts, ok := split(path); ok {
 		var static, dynamic, wildcard uint16

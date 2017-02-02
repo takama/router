@@ -297,8 +297,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
-// Handlers returns list of handlers
-func (r *Router) Handlers() []Handler {
+// HandlersList returns list of handlers
+func (r *Router) HandlersList() []Handler {
 	var handlers []Handler
 	for method, parser := range r.handlers {
 		for _, path := range parser.paths() {
