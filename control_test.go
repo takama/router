@@ -64,7 +64,7 @@ func TestMetaData(t *testing.T) {
 	c.CompactJSON(true).UseMetaData()
 	trw := httptest.NewRecorder()
 	c.Writer, c.Request = trw, req
-	c.APIVersion(hd.APIVersion).Context(hd.Context).Body(nil)
+	c.APIVersion(hd.APIVersion).HeaderContext(hd.Context).Body(nil)
 	if content, err := json.Marshal(hd); err == nil {
 		if trw.Body.String() != string(content) {
 			t.Error("Expected", string(content), "got", trw.Body.String())
@@ -79,7 +79,7 @@ func TestMetaData(t *testing.T) {
 	hd.ID = "id17"
 	params := []Param{Param{Key: "userId", Value: "@me"}, Param{Key: "groupId", Value: "@self"}}
 	hd.Params = params
-	c.Set(params...).Context(hd.Context).Method(hd.Method).ID(hd.ID).Body(nil)
+	c.Set(params...).HeaderContext(hd.Context).Method(hd.Method).ID(hd.ID).Body(nil)
 	if content, err := json.Marshal(hd); err == nil {
 		if trw.Body.String() != string(content) {
 			t.Error("Expected", string(content), "got", trw.Body.String())

@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.6.1 provides fast HTTP request router.
+Package router 0.6.2 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -196,6 +196,11 @@ func (r *Router) HEAD(path string, h Handle) {
 // OPTIONS is a shortcut for Router Handle("OPTIONS", path, handle)
 func (r *Router) OPTIONS(path string, h Handle) {
 	r.Handle("OPTIONS", path, h)
+}
+
+// PATCH is a shortcut for router.Handle("PATCH", path, handle)
+func (r *Router) PATCH(path string, handle Handle) {
+	r.Handle("PATCH", path, handle)
 }
 
 // Handle registers a new request handle with the given path and method.
