@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.5.0 provides fast HTTP request router.
+Package router 0.6.0 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
@@ -157,6 +157,12 @@ type Router struct {
 // Handle type is aliased to type of handler function.
 type Handle func(*Control)
 
+// Handler type contains information about method and path
+type Handler struct {
+	Method string
+	Path   string
+}
+
 // New it returns a new multiplexer (Router).
 func New() *Router {
 	return &Router{handlers: make(map[string]*parser)}
@@ -289,4 +295,16 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Add("Allow", strings.Join(allowed, ", "))
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+}
+
+// HandlersList returns list of handlers
+func (r *Router) HandlersList() []Handler {
+	var handlers []Handler
+	for method, parser := range r.handlers {
+		for _, path := range parser.paths() {
+			handlers = append(handlers, Handler{Method: method, Path: path})
+		}
+	}
+
+	return handlers
 }

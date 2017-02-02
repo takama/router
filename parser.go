@@ -14,8 +14,9 @@ const (
 )
 
 type parser struct {
-	fields map[uint8]records
-	static map[string]Handle
+	fields   map[uint8]records
+	static   map[string]Handle
+	wildcard records
 }
 
 type record struct {
@@ -32,25 +33,32 @@ func (n records) Less(i, j int) bool { return n[i].key < n[j].key }
 
 func newParser() *parser {
 	return &parser{
-		fields: make(map[uint8]records),
-		static: make(map[string]Handle),
+		fields:   make(map[uint8]records),
+		static:   make(map[string]Handle),
+		wildcard: records{},
 	}
 }
 
 func (p *parser) register(path string, handle Handle) bool {
 	if trim(path, " ") == asterisk {
 		p.static[asterisk] = handle
+
+		return true
 	}
 	if parts, ok := split(path); ok {
-		var static, dynamic uint16
+		var static, dynamic, wildcard uint16
 		for _, value := range parts {
 			if len(value) >= 1 && value[0:1] == ":" {
 				dynamic++
+			} else if len(value) == 1 && value == "*" {
+				wildcard++
 			} else {
 				static++
 			}
 		}
-		if dynamic == 0 {
+		if wildcard > 0 {
+			p.wildcard = append(p.wildcard, &record{key: dynamic<<8 + static, handle: handle, parts: parts})
+		} else if dynamic == 0 {
 			p.static["/"+join(parts)] = handle
 		} else {
 			level := uint8(len(parts))
@@ -75,24 +83,13 @@ func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
 			return handle, nil, true
 		}
 		if data := p.fields[uint8(len(parts))]; data != nil {
-			for _, nds := range data {
-				values := nds.parts
-				result = nil
-				found := true
-				for idx, value := range values {
-					if value != parts[idx] && !(len(value) >= 1 && value[0:1] == ":") {
-						found = false
-						break
-					} else {
-						if len(value) >= 1 && value[0:1] == ":" {
-							result = append(result, Param{Key: value, Value: parts[idx]})
-						}
-					}
-				}
-				if found {
-					return nds.handle, result, true
-				}
+			if handle, result, ok := parseParams(data, parts); ok {
+				return handle, result, ok
 			}
+		}
+		// try to match wildcard route
+		if handle, result, ok := parseParams(p.wildcard, parts); ok {
+			return handle, result, ok
 		}
 	}
 
@@ -186,4 +183,46 @@ func explode(s string) []string {
 	}
 	a[na] = s[start:]
 	return a[0 : na+1]
+}
+
+func parseParams(data records, parts []string) (handle Handle, result []Param, ok bool) {
+	for _, nds := range data {
+		values := nds.parts
+		result = nil
+		found := true
+		for idx, value := range values {
+			if len(value) == 1 && value == "*" {
+				break
+			} else if value != parts[idx] && !(len(value) >= 1 && value[0:1] == ":") {
+				found = false
+				break
+			} else {
+				if len(value) >= 1 && value[0:1] == ":" {
+					result = append(result, Param{Key: value, Value: parts[idx]})
+				}
+			}
+		}
+		if found {
+			return nds.handle, result, true
+		}
+	}
+
+	return nil, nil, false
+}
+
+func (p *parser) paths() []string {
+	var paths []string
+	for path := range p.static {
+		paths = append(paths, path)
+	}
+	for _, records := range p.fields {
+		for _, record := range records {
+			paths = append(paths, "/"+join(record.parts))
+		}
+	}
+	for _, record := range p.wildcard {
+		paths = append(paths, "/"+join(record.parts))
+	}
+
+	return paths
 }
