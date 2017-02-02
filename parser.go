@@ -210,19 +210,19 @@ func parseParams(data records, parts []string) (handle Handle, result []Param, o
 	return nil, nil, false
 }
 
-func (p *parser) paths() []string {
-	var paths []string
+func (p *parser) routes() []string {
+	var rs []string
 	for path := range p.static {
-		paths = append(paths, path)
+		rs = append(rs, path)
 	}
 	for _, records := range p.fields {
 		for _, record := range records {
-			paths = append(paths, "/"+join(record.parts))
+			rs = append(rs, "/"+join(record.parts))
 		}
 	}
 	for _, record := range p.wildcard {
-		paths = append(paths, "/"+join(record.parts))
+		rs = append(rs, "/"+join(record.parts))
 	}
 
-	return paths
+	return rs
 }

@@ -157,8 +157,8 @@ type Router struct {
 // Handle type is aliased to type of handler function.
 type Handle func(*Control)
 
-// Handler type contains information about method and path
-type Handler struct {
+// Route type contains information about HTTP method and path
+type Route struct {
 	Method string
 	Path   string
 }
@@ -297,14 +297,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
-// HandlersList returns list of handlers
-func (r *Router) HandlersList() []Handler {
-	var handlers []Handler
+// Routes returns list of registered HTTP methods with path
+func (r *Router) Routes() []Route {
+	var rs []Route
 	for method, parser := range r.handlers {
-		for _, path := range parser.paths() {
-			handlers = append(handlers, Handler{Method: method, Path: path})
+		for _, path := range parser.routes() {
+			rs = append(rs, Route{Method: method, Path: path})
 		}
 	}
 
-	return handlers
+	return rs
 }
