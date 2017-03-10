@@ -77,7 +77,7 @@ func TestMetaData(t *testing.T) {
 	hd.Context = "bart"
 	hd.Method = "people.get"
 	hd.ID = "id17"
-	params := []Param{Param{Key: "userId", Value: "@me"}, Param{Key: "groupId", Value: "@self"}}
+	params := []Param{{Key: "userId", Value: "@me"}, {Key: "groupId", Value: "@self"}}
 	hd.Params = params
 	c.Set(params...).HeaderContext(hd.Context).Method(hd.Method).ID(hd.ID).Body(nil)
 	if content, err := json.Marshal(hd); err == nil {
@@ -125,7 +125,7 @@ func TestErrorData(t *testing.T) {
 	trw = httptest.NewRecorder()
 	c.Writer = trw
 	errors := []Error{
-		Error{Message: "File Not Found"},
+		{Message: "File Not Found"},
 	}
 	ed.Errors = errors
 	c.AddError(errors...).Body(nil)
