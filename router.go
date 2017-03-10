@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package router 0.6.2 provides fast HTTP request router.
+Package router 0.6.3 provides fast HTTP request router.
 
 The router matches incoming requests by the request method and the path.
 If a handle is registered for this path and method, the router delegates the
