@@ -122,6 +122,11 @@ func (c *Control) Code(code int) *Control {
 	return c
 }
 
+// GetCode returns status code
+func (c *Control) GetCode() int {
+	return c.code
+}
+
 // CompactJSON changes JSON output format (default mode is false)
 func (c *Control) CompactJSON(mode bool) *Control {
 	c.compactJSON = mode
@@ -188,6 +193,11 @@ func (c *Control) AddError(errors ...Error) *Control {
 func (c *Control) UseTimer() {
 	c.useMetaData = true
 	c.timer = time.Now()
+}
+
+// GetTimer returns timer state
+func (c *Control) GetTimer() time.Time {
+	return c.timer
 }
 
 // Body renders the given data into the response body
