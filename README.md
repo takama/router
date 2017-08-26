@@ -1,11 +1,14 @@
 Go Router
 =========
 
+[![Build Status](https://travis-ci.org/takama/router.svg?branch=master)](https://travis-ci.org/takama/router)
+[![GoDoc](https://godoc.org/github.com/takama/router?status.svg)](https://godoc.org/github.com/takama/router)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/takama/router/issues)
+[![Go Report Card](https://goreportcard.com/badge/github.com/takama/router)](https://goreportcard.com/report/github.com/takama/router)
+[![codecov.io](https://codecov.io/github/takama/router/coverage.svg?branch=master)](https://codecov.io/github/takama/router?branch=master)
+
 A simple, compact and fast router package to process HTTP requests.
 It has some sugar from framework however still lightweight. The router package is useful to prepare a RESTful API for Go services. It has JSON output, which bind automatically for relevant type of data. The router has timer feature to display duration of request handling in the header  
-
-[![Build Status](https://travis-ci.org/takama/router.png?branch=master)](https://travis-ci.org/takama/router)
-[![GoDoc](https://godoc.org/github.com/takama/router?status.svg)](https://godoc.org/github.com/takama/router)
 
 ### Examples
 
