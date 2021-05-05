@@ -71,29 +71,29 @@ func (p *parser) register(path string, handle Handle) bool {
 	return false
 }
 
-func (p *parser) get(path string) (handle Handle, result []Param, ok bool) {
+func (p *parser) get(path string) (handle Handle, result []Param, route string, ok bool) {
 	if handle, ok := p.static[asterisk]; ok {
-		return handle, nil, true
+		return handle, nil, asterisk, true
 	}
 	if handle, ok := p.static[path]; ok {
-		return handle, nil, true
+		return handle, nil, path, true
 	}
 	if parts, ok := split(path); ok {
 		if handle, ok := p.static["/"+join(parts)]; ok {
-			return handle, nil, true
+			return handle, nil, "/" + join(parts), true
 		}
 		if data := p.fields[uint8(len(parts))]; data != nil {
-			if handle, result, ok := parseParams(data, parts); ok {
-				return handle, result, ok
+			if handle, result, pathParts, ok := parseParams(data, parts); ok {
+				return handle, result, "/" + join(pathParts), ok
 			}
 		}
 		// try to match wildcard route
-		if handle, result, ok := parseParams(p.wildcard, parts); ok {
-			return handle, result, ok
+		if handle, result, pathParts, ok := parseParams(p.wildcard, parts); ok {
+			return handle, result, "/" + join(pathParts), ok
 		}
 	}
 
-	return nil, nil, false
+	return nil, nil, "", false
 }
 
 func split(path string) ([]string, bool) {
@@ -185,7 +185,7 @@ func explode(s string) []string {
 	return a[0 : na+1]
 }
 
-func parseParams(data records, parts []string) (handle Handle, result []Param, ok bool) {
+func parseParams(data records, parts []string) (handle Handle, result []Param, values []string, ok bool) {
 	for _, nds := range data {
 		values := nds.parts
 		result = nil
@@ -203,11 +203,11 @@ func parseParams(data records, parts []string) (handle Handle, result []Param, o
 			}
 		}
 		if found {
-			return nds.handle, result, true
+			return nds.handle, result, values, true
 		}
 	}
 
-	return nil, nil, false
+	return nil, nil, nil, false
 }
 
 func (p *parser) routes() []string {

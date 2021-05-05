@@ -57,6 +57,9 @@ type Control struct {
 
 	// timer used to calculate a elapsed time for handler and writing it in a response
 	timer time.Time
+
+	// route pattern (it helps to define metrics for REST API requests)
+	route string
 }
 
 // Param is a URL parameter which represents as key and value.

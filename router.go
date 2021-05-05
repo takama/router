@@ -230,18 +230,18 @@ func (r *Router) HandlerFunc(method, path string, handler http.HandlerFunc) {
 }
 
 // Lookup returns handler and URL parameters that associated with path.
-func (r *Router) Lookup(method, path string) (Handle, []Param, bool) {
+func (r *Router) Lookup(method, path string) (Handle, []Param, string, bool) {
 	if parser := r.handlers[method]; parser != nil {
 		return parser.get(path)
 	}
-	return nil, nil, false
+	return nil, nil, "", false
 }
 
 // AllowedMethods returns list of allowed methods
 func (r *Router) AllowedMethods(path string) []string {
 	var allowed []string
 	for method, parser := range r.handlers {
-		if _, _, ok := parser.get(path); ok {
+		if _, _, _, ok := parser.get(path); ok {
 			allowed = append(allowed, method)
 		}
 	}
@@ -273,8 +273,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Logger(c)
 	}
 	if _, ok := r.handlers[req.Method]; ok {
-		if handle, params, ok := r.handlers[req.Method].get(req.URL.Path); ok {
-			c := &Control{Request: req, Writer: w}
+		if handle, params, route, ok := r.handlers[req.Method].get(req.URL.Path); ok {
+			c := &Control{Request: req, Writer: w, route: route}
 			if len(params) > 0 {
 				c.params = append(c.params, params...)
 			}

@@ -12,8 +12,9 @@ type registered struct {
 }
 
 type expected struct {
-	request    string
 	data       string
+	request    string
+	route      string
 	paramCount int
 	params     []Param
 }
@@ -77,22 +78,25 @@ var setOfRegistered = []registered{
 
 var setOfExpected = []expected{
 	{
-		"/hello/Jane",
 		"Hello Jane",
+		"/hello/Jane",
+		"/hello/:name",
 		1,
 		[]Param{
 			{":name", "Jane"},
 		},
 	},
 	{
-		"/hello/John",
 		"Hello from static path",
+		"/hello/John",
+		"/hello/John",
 		0,
 		[]Param{},
 	},
 	{
-		"/hell/jack",
 		"jack from hell",
+		"/hell/jack",
+		"/:h/:n",
 		2,
 		[]Param{
 			{":h", "hell"},
@@ -100,8 +104,9 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/products/table/orders/23",
 		"Product: table order# 23",
+		"/products/table/orders/23",
+		"/products/:name/orders/:id",
 		2,
 		[]Param{
 			{":name", "table"},
@@ -109,16 +114,18 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/products/book/orders/12",
 		"Product: book order# 12",
+		"/products/book/orders/12",
+		"/products/book/orders/:id",
 		1,
 		[]Param{
 			{":id", "12"},
 		},
 	},
 	{
-		"/products/pen/orders/11",
 		"Product: pen order# 11",
+		"/products/pen/orders/11",
+		"/products/:name/orders/:id",
 		2,
 		[]Param{
 			{":name", "pen"},
@@ -126,8 +133,9 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/products/pen/order/10",
 		"Product: pen # 10",
+		"/products/pen/order/10",
+		"/products/:name/:order/:id",
 		3,
 		[]Param{
 			{":name", "pen"},
@@ -136,8 +144,9 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/product/pen/order/10",
 		"product pen order # 10",
+		"/product/pen/order/10",
+		"/:product/:name/:order/:id",
 		4,
 		[]Param{
 			{":product", "product"},
@@ -147,22 +156,25 @@ var setOfExpected = []expected{
 		},
 	},
 	{
-		"/static/greetings/something",
 		"Hello from star static path",
+		"/static/greetings/something",
+		"/static/*",
 		0,
 		[]Param{},
 	},
 	{
-		"/files/css/style.css",
 		"css",
+		"/files/css/style.css",
+		"/files/:dir/*",
 		1,
 		[]Param{
 			{":dir", "css"},
 		},
 	},
 	{
-		"/files/js/app.js",
 		"js",
+		"/files/js/app.js",
+		"/files/:dir/*",
 		1,
 		[]Param{
 			{":dir", "js"},
@@ -176,12 +188,15 @@ func TestParserRegisterGet(t *testing.T) {
 		p.register(request.path, request.handle)
 	}
 	for _, exp := range setOfExpected {
-		handle, params, ok := p.get(exp.request)
+		handle, params, route, ok := p.get(exp.request)
 		if !ok {
 			t.Error("Error: get data for path", exp.request)
 		}
 		if len(params) != exp.paramCount {
-			t.Error("Expected length of param", exp.paramCount, "got", len(params))
+			t.Error("Expected length of param", exp.paramCount, ", got", len(params))
+		}
+		if route != exp.route {
+			t.Error("Expected route", exp.route, ", got", route)
 		}
 		c := new(Control)
 		c.Set(params...)
@@ -193,7 +208,7 @@ func TestParserRegisterGet(t *testing.T) {
 		c.Writer, c.Request = trw, req
 		handle(c)
 		if trw.Body.String() != exp.data {
-			t.Error("Expected", exp.data, "got", trw.Body.String())
+			t.Error("Expected", exp.data, ", got", trw.Body.String())
 		}
 	}
 }

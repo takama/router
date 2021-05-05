@@ -76,19 +76,22 @@ func TestRouterRegisterHandlers(t *testing.T) {
 	}
 
 	// Checks parameters for static path method
-	if handle, params, ok := r.Lookup("GET", "/hello"); ok {
+	if handle, params, route, ok := r.Lookup("GET", "/hello"); ok {
 		if handle == nil {
 			t.Error("Handle not initialized")
 		}
 		if len(params) != 0 {
 			t.Error("Expected len of params", 0, "got", len(params))
 		}
+		if route != "/hello" {
+			t.Error("Expected path", "/hello", "got", route)
+		}
 	} else {
 		t.Error("Path not fouund: /hello")
 	}
 
 	// Checks parameters for dynamic path method
-	if handle, params, ok := r.Lookup("GET", "/hello/John"); ok {
+	if handle, params, route, ok := r.Lookup("GET", "/hello/John"); ok {
 		if handle == nil {
 			t.Error("Handle not initialized")
 		}
@@ -100,6 +103,9 @@ func TestRouterRegisterHandlers(t *testing.T) {
 		}
 		if params[0].Value != "John" {
 			t.Error("Expected value", "Jonn", "got", params[0].Key)
+		}
+		if route != "/hello/:name" {
+			t.Error("Expected route path", "/hello/:name", "got", route)
 		}
 	} else {
 		t.Error("Path not fouund: /hello/John")
