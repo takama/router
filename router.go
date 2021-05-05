@@ -230,11 +230,12 @@ func (r *Router) HandlerFunc(method, path string, handler http.HandlerFunc) {
 }
 
 // Lookup returns handler and URL parameters that associated with path.
-func (r *Router) Lookup(method, path string) (Handle, []Param, string, bool) {
+func (r *Router) Lookup(method, path string) (Handle, []Param, bool) {
 	if parser := r.handlers[method]; parser != nil {
-		return parser.get(path)
+		handle, params, _, ok := parser.get(path)
+		return handle, params, ok
 	}
-	return nil, nil, "", false
+	return nil, nil, false
 }
 
 // AllowedMethods returns list of allowed methods
